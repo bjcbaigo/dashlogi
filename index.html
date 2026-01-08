@@ -111,6 +111,7 @@
                                 <th class="text-left px-5 py-3 font-semibold">Orden</th>
                                 <th class="text-left px-5 py-3 font-semibold">Canal</th>
                                 <th class="text-left px-5 py-3 font-semibold">Ingreso</th>
+                                <th class="text-right px-5 py-3 font-semibold">Días</th>
                                 <th class="text-right px-5 py-3 font-semibold">Horas</th>
                                 <th class="text-center px-5 py-3 font-semibold">Alerta</th>
                             </tr>
@@ -163,18 +164,18 @@
 
         // Datos de ejemplo
         const DATOS_EJEMPLO = [
-            { OrdenID: 'ML-78901234', Canal: 'Mercado Libre', FechaHoraIngreso: '2026-01-07 14:30:00', FechaHoraDespacho: '2026-01-08 10:15:00', Estado: 'DESPACHADO', HorasTranscurridas: 19.75 },
-            { OrdenID: 'ML-78901235', Canal: 'Mercado Libre', FechaHoraIngreso: '2026-01-07 15:45:00', FechaHoraDespacho: '2026-01-08 11:30:00', Estado: 'DESPACHADO', HorasTranscurridas: 19.75 },
-            { OrdenID: 'ML-78901236', Canal: 'Mercado Libre', FechaHoraIngreso: '2026-01-07 16:20:00', FechaHoraDespacho: null, Estado: 'PENDIENTE', HorasTranscurridas: 28.5 },
-            { OrdenID: 'PS-45678', Canal: 'PrestaShop', FechaHoraIngreso: '2026-01-07 09:15:00', FechaHoraDespacho: '2026-01-07 16:45:00', Estado: 'DESPACHADO', HorasTranscurridas: 7.5 },
-            { OrdenID: 'PS-45679', Canal: 'PrestaShop', FechaHoraIngreso: '2026-01-07 10:00:00', FechaHoraDespacho: null, Estado: 'PENDIENTE', HorasTranscurridas: 52.3 },
-            { OrdenID: 'PS-45680', Canal: 'PrestaShop', FechaHoraIngreso: '2026-01-06 14:00:00', FechaHoraDespacho: null, Estado: 'PENDIENTE', HorasTranscurridas: 76.2 },
-            { OrdenID: 'ML-78901237', Canal: 'Mercado Libre', FechaHoraIngreso: '2026-01-07 11:00:00', FechaHoraDespacho: '2026-01-07 15:30:00', Estado: 'DESPACHADO', HorasTranscurridas: 4.5 },
-            { OrdenID: 'ML-78901238', Canal: 'Mercado Libre', FechaHoraIngreso: '2026-01-07 12:30:00', FechaHoraDespacho: '2026-01-08 09:00:00', Estado: 'DESPACHADO', HorasTranscurridas: 20.5 },
-            { OrdenID: 'WC-1234', Canal: 'Web Chemes', FechaHoraIngreso: '2026-01-07 08:00:00', FechaHoraDespacho: '2026-01-07 14:00:00', Estado: 'DESPACHADO', HorasTranscurridas: 6 },
-            { OrdenID: 'WC-1235', Canal: 'Web Chemes', FechaHoraIngreso: '2026-01-06 16:00:00', FechaHoraDespacho: null, Estado: 'PENDIENTE', HorasTranscurridas: 48.5 },
-            { OrdenID: 'ML-78901239', Canal: 'Mercado Libre', FechaHoraIngreso: '2026-01-06 10:00:00', FechaHoraDespacho: '2026-01-06 18:00:00', Estado: 'DESPACHADO', HorasTranscurridas: 8 },
-            { OrdenID: 'ML-78901240', Canal: 'Mercado Libre', FechaHoraIngreso: '2026-01-05 15:00:00', FechaHoraDespacho: '2026-01-06 11:00:00', Estado: 'DESPACHADO', HorasTranscurridas: 20 }
+            { OrdenID: '2000015991515', Canal: 'CHEMESCASACENTRAL', FechaHoraIngreso: '2026-01-07 14:30:00', FechaHoraDespacho: '2026-01-08 10:15:00', Estado: 'DESPACHADO', HorasTranscurridas: 19.75, DiasTranscurridos: 0 },
+            { OrdenID: '2000015991516', Canal: 'CHEMESCASACENTRAL', FechaHoraIngreso: '2026-01-07 15:45:00', FechaHoraDespacho: '2026-01-08 11:30:00', Estado: 'DESPACHADO', HorasTranscurridas: 19.75, DiasTranscurridos: 0 },
+            { OrdenID: '2000015991517', Canal: 'CHEMESCASACENTRAL', FechaHoraIngreso: '2026-01-07 16:20:00', FechaHoraDespacho: null, Estado: 'PENDIENTE', HorasTranscurridas: 28.5, DiasTranscurridos: 1 },
+            { OrdenID: '78542', Canal: 'PrestaShop_itst', FechaHoraIngreso: '2026-01-07 09:15:00', FechaHoraDespacho: '2026-01-07 16:45:00', Estado: 'DESPACHADO', HorasTranscurridas: 7.5, DiasTranscurridos: 0 },
+            { OrdenID: '78543', Canal: 'PrestaShop_itst', FechaHoraIngreso: '2026-01-07 10:00:00', FechaHoraDespacho: null, Estado: 'PENDIENTE', HorasTranscurridas: 52.3, DiasTranscurridos: 2 },
+            { OrdenID: '78544', Canal: 'PrestaShop_itst', FechaHoraIngreso: '2026-01-06 14:00:00', FechaHoraDespacho: null, Estado: 'PENDIENTE', HorasTranscurridas: 76.2, DiasTranscurridos: 3 },
+            { OrdenID: 'BNA-1001', Canal: 'Tienda_BNA', FechaHoraIngreso: '2026-01-07 11:00:00', FechaHoraDespacho: '2026-01-07 15:30:00', Estado: 'DESPACHADO', HorasTranscurridas: 4.5, DiasTranscurridos: 0 },
+            { OrdenID: 'BNA-1002', Canal: 'Tienda_BNA', FechaHoraIngreso: '2026-01-07 12:30:00', FechaHoraDespacho: '2026-01-08 09:00:00', Estado: 'DESPACHADO', HorasTranscurridas: 20.5, DiasTranscurridos: 0 },
+            { OrdenID: '2000015991518', Canal: 'CHEMESCASACENTRAL', FechaHoraIngreso: '2026-01-07 08:00:00', FechaHoraDespacho: '2026-01-07 14:00:00', Estado: 'DESPACHADO', HorasTranscurridas: 6, DiasTranscurridos: 0 },
+            { OrdenID: 'BNA-1003', Canal: 'Tienda_BNA', FechaHoraIngreso: '2026-01-06 16:00:00', FechaHoraDespacho: null, Estado: 'PENDIENTE', HorasTranscurridas: 48.5, DiasTranscurridos: 2 },
+            { OrdenID: '2000015991519', Canal: 'CHEMESCASACENTRAL', FechaHoraIngreso: '2026-01-06 10:00:00', FechaHoraDespacho: '2026-01-06 18:00:00', Estado: 'DESPACHADO', HorasTranscurridas: 8, DiasTranscurridos: 0 },
+            { OrdenID: '2000015991520', Canal: 'CHEMESCASACENTRAL', FechaHoraIngreso: '2026-01-05 15:00:00', FechaHoraDespacho: '2026-01-06 11:00:00', Estado: 'DESPACHADO', HorasTranscurridas: 20, DiasTranscurridos: 0 }
         ];
 
         var chartSLA, chartAging, chartCanales;
@@ -200,7 +201,13 @@
         }
 
         function getCanalIcon(canal) {
-            const icons = { 'Mercado Libre': '🛒', 'PrestaShop': '🛍️', 'Web Chemes': '🌐', 'Otros Canales': '📦' };
+            const icons = { 
+                'CHEMESCASACENTRAL': '🏠', 
+                'PrestaShop_itst': '🛍️', 
+                'Tienda_BNA': '🏦',
+                'Mercado Libre': '🛒',
+                'Otros Canales': '📦' 
+            };
             return icons[canal] || '📦';
         }
 
@@ -322,13 +329,15 @@
             document.getElementById('pendientesCount').textContent = pendientes.length + ' pedidos';
 
             document.getElementById('tablaPendientes').innerHTML = pendientes.length === 0 
-                ? '<tr><td colspan="5" class="px-5 py-8 text-center text-teal-400">🎉 ¡No hay pedidos pendientes!</td></tr>'
+                ? '<tr><td colspan="6" class="px-5 py-8 text-center text-teal-400">🎉 ¡No hay pedidos pendientes!</td></tr>'
                 : pendientes.map(p => {
                     const alerta = getAlertaIcon(p.HorasTranscurridas);
+                    const dias = p.DiasTranscurridos || Math.floor(p.HorasTranscurridas / 24);
                     return '<tr class="hover:bg-dark-700/50 transition-colors">' +
-                        '<td class="px-5 py-3 text-white font-mono">' + p.OrdenID + '</td>' +
+                        '<td class="px-5 py-3 text-white font-mono text-xs">' + p.OrdenID + '</td>' +
                         '<td class="px-5 py-3 text-slate-300">' + getCanalIcon(p.Canal) + ' ' + p.Canal + '</td>' +
-                        '<td class="px-5 py-3 text-slate-400">' + formatFecha(p.FechaHoraIngreso) + '</td>' +
+                        '<td class="px-5 py-3 text-slate-400 text-sm">' + formatFecha(p.FechaHoraIngreso) + '</td>' +
+                        '<td class="px-5 py-3 text-right font-semibold ' + alerta.class + '">' + dias + 'd</td>' +
                         '<td class="px-5 py-3 text-right font-semibold ' + alerta.class + '">' + formatHoras(p.HorasTranscurridas) + '</td>' +
                         '<td class="px-5 py-3 text-center"><span title="' + alerta.label + '">' + alerta.icon + '</span></td>' +
                     '</tr>';
