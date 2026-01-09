@@ -358,7 +358,16 @@
     }
   }
 
-  document.getElementById('btnActualizar').addEventListener('click', cargarDatos);
+  window.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('btnActualizar');
+  if (btn) {
+    btn.addEventListener('click', cargarDatos);
+  } else {
+    console.warn('btnActualizar no encontrado en el DOM');
+  }
+
   cargarDatos();
   setInterval(cargarDatos, 5 * 60 * 1000);
+});
+
 </script>
