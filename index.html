@@ -1,373 +1,521 @@
-<script>
-  const CONFIG = {
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwoTd89Rjf6MxBqDaXe8t-6aH82JrooGZseQ4Ub_0FoL81cafaxyFAntC41tKO68-pT/exec',
-    USAR_DATOS_EJEMPLO: false,
-    SLA_OBJETIVO: 90
-  };
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Logística - Chemes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .animate-fade { animation: fadeSlideUp 0.5s ease-out both; }
+        .animate-pulse-slow { animation: pulse 2s ease-in-out infinite; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#0f172a', 800: '#1e293b', 700: '#334155', 600: '#475569' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-dark-900">
 
-  // Datos de ejemplo (se mantienen)
-  const DATOS_EJEMPLO = [
-    { OrdenID: '2000015991515', Canal: 'CHEMESCASACENTRAL', FechaHoraIngreso: '2026-01-07 14:30:00', FechaHoraDespacho: '2026-01-08 10:15:00', DiaLogisticoIngreso: '2026-01-07', DiaLogisticoDespacho: '2026-01-07', Estado: 'DESPACHADO', HorasTranscurridas: 19.75, DiasTranscurridos: 0 },
-    { OrdenID: '2000015991517', Canal: 'CHEMESCASACENTRAL', FechaHoraIngreso: '2026-01-07 16:20:00', FechaHoraDespacho: null, DiaLogisticoIngreso: '2026-01-07', DiaLogisticoDespacho: null, Estado: 'PENDIENTE', HorasTranscurridas: 28.5, DiasTranscurridos: 1 },
-    { OrdenID: '78542', Canal: 'PrestaShop_itst', FechaHoraIngreso: '2026-01-07 09:15:00', FechaHoraDespacho: '2026-01-07 16:45:00', DiaLogisticoIngreso: '2026-01-06', DiaLogisticoDespacho: '2026-01-07', Estado: 'DESPACHADO', HorasTranscurridas: 7.5, DiasTranscurridos: 0 },
-    { OrdenID: 'BNA-1002', Canal: 'Tienda_BNA', FechaHoraIngreso: '2026-01-07 12:30:00', FechaHoraDespacho: '2026-01-08 09:00:00', DiaLogisticoIngreso: '2026-01-06', DiaLogisticoDespacho: '2026-01-07', Estado: 'DESPACHADO', HorasTranscurridas: 20.5, DiasTranscurridos: 0 }
-  ];
+    <header class="bg-dark-800 border-b border-dark-700 shadow-xl">
+        <div class="max-w-7xl mx-auto px-6 py-5">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight text-white">Tiempos de Despacho</h1>
+                        <p class="text-slate-400 text-sm">Dashboard Logística - Chemes</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-dark-700 rounded-lg px-3 py-2 border border-dark-600">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="text-slate-300 text-sm">Día logístico: 13:01 → 13:00</span>
+                    </div>
+                    <button id="btnActualizar" class="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-dark-900 font-semibold px-4 py-2 rounded-lg transition-all shadow-lg shadow-orange-500/20">
+                        <svg id="iconRefresh" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span class="text-sm">Actualizar</span>
+                    </button>
+                </div>
+            </div>
+            <div id="ultimaActualizacion" class="mt-3 text-xs text-slate-500"></div>
+        </div>
+    </header>
 
-  var chartSLA, chartAging, chartCanales;
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <div id="errorMsg" class="hidden mb-6 bg-pink-500/10 border border-pink-500/30 text-pink-400 px-4 py-3 rounded-xl flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span id="errorText"></span>
+        </div>
 
-  const COLORES = {
-    canales: ['#f97316', '#a78bfa', '#60a5fa', '#f472b6'],
-    aging: ['#2dd4bf', '#fbbf24', '#f97316', '#ef4444'],
-    sla: { ok: '#2dd4bf', warning: '#fbbf24', danger: '#ef4444' }
-  };
+        <!-- Métricas principales -->
+        <div id="metricas" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6"></div>
 
-  // -----------------------------
-  // Helpers: parseo y normalización
-  // -----------------------------
-  function toNumberAny(x) {
-    if (x === null || x === undefined || x === '') return null;
-    if (typeof x === 'number') return x;
-    const s = String(x).trim().replace(',', '.');
-    const n = Number(s);
-    return Number.isFinite(n) ? n : null;
-  }
+        <!-- SLA Gauge -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <div class="bg-dark-800 rounded-2xl border border-dark-700 p-6">
+                <h3 class="text-sm font-semibold text-white mb-4 text-center">SLA Cumplimiento (24hs)</h3>
+                <div class="relative h-48 flex items-center justify-center">
+                    <canvas id="chartSLA"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span id="slaValue" class="text-4xl font-bold text-white">--%</span>
+                        <span class="text-sm text-slate-400">Objetivo: 90%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-dark-800 rounded-2xl border border-dark-700 p-6">
+                <h3 class="text-sm font-semibold text-white mb-4 text-center">Aging de Pendientes</h3>
+                <div class="h-48"><canvas id="chartAging"></canvas></div>
+            </div>
+            <div class="bg-dark-800 rounded-2xl border border-dark-700 p-6">
+                <h3 class="text-sm font-semibold text-white mb-4 text-center">Despachos por Canal</h3>
+                <div class="h-48"><canvas id="chartCanales"></canvas></div>
+            </div>
+        </div>
 
-  function parseDateSafe(value) {
-    if (!value) return null;
-    if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+        <!-- Tabla de Pendientes -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                <span class="text-lg">⚠️</span> Pedidos Pendientes de Despacho
+                <span id="pendientesCount" class="ml-2 px-2 py-1 bg-pink-500/20 text-pink-400 text-sm rounded-full"></span>
+            </h2>
+            <div class="bg-dark-800 rounded-2xl border border-dark-700 overflow-hidden">
+                <div class="overflow-x-auto max-h-96">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-dark-700 text-slate-400 sticky top-0">
+                            <tr>
+                                <th class="text-left px-5 py-3 font-semibold">Orden</th>
+                                <th class="text-left px-5 py-3 font-semibold">Canal</th>
+                                <th class="text-left px-5 py-3 font-semibold">Ingreso</th>
+                                <th class="text-right px-5 py-3 font-semibold">Días</th>
+                                <th class="text-right px-5 py-3 font-semibold">Horas</th>
+                                <th class="text-center px-5 py-3 font-semibold">Alerta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaPendientes" class="divide-y divide-dark-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-    let s = String(value).trim().replace(/"/g, '');
-    if (!s || s.toUpperCase() === 'NULL') return null;
+        <!-- Performance por Canal -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Performance por Canal
+            </h2>
+            <div class="bg-dark-800 rounded-2xl border border-dark-700 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-dark-700 text-slate-400">
+                            <tr>
+                                <th class="text-left px-5 py-3 font-semibold">Canal</th>
+                                <th class="text-right px-5 py-3 font-semibold">Ingresaron</th>
+                                <th class="text-right px-5 py-3 font-semibold">Despachados</th>
+                                <th class="text-right px-5 py-3 font-semibold">Pendientes</th>
+                                <th class="text-right px-5 py-3 font-semibold">Tiempo Prom.</th>
+                                <th class="text-right px-5 py-3 font-semibold">SLA 24hs</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCanales" class="divide-y divide-dark-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-    // ISO o "YYYY-MM-DD HH:mm:ss"
-    if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
-      // normalizar espacio a 'T'
-      if (s.includes(' ') && !s.includes('T')) s = s.replace(' ', 'T');
-      const d = new Date(s);
-      return isNaN(d.getTime()) ? null : d;
-    }
+        <div class="mt-8 text-center text-sm text-slate-500">
+            <p>Datos extraídos de Tango Gestión - Talonarios e-commerce: 234, 205</p>
+            <p class="mt-1">Día logístico: 13:01 a 13:00 del día siguiente</p>
+        </div>
+    </main>
 
-    // Formato con barras: dd/mm/yyyy o m/d/yyyy (+ hora)
-    // Heurística:
-    // - si el primer número > 12 => D/M/Y
-    // - si el segundo > 12 => M/D/Y
-    // - si ambos <= 12 => asumimos D/M/Y (más común en AR) PERO:
-    //   si tu data viene de CSV/Excel puede ser M/D/Y; por eso usamos la heurística arriba.
-    const parts = s.split(' ');
-    const ab = parts[0].split('/');
-    if (ab.length === 3) {
-      const a = parseInt(ab[0], 10);
-      const b = parseInt(ab[1], 10);
-      const yyyy = parseInt(ab[2], 10);
+    <script>
+        const CONFIG = {
+            APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwoTd89Rjf6MxBqDaXe8t-6aH82JrooGZseQ4Ub_0FoL81cafaxyFAntC41tKO68-pT/exec',
+            USAR_DATOS_EJEMPLO: false,
+            SLA_OBJETIVO: 90
+        };
 
-      let day, month;
-      if (a > 12 && b <= 12) { day = a; month = b; }
-      else if (b > 12 && a <= 12) { month = a; day = b; }
-      else {
-        // ambiguo (1/9/2026): acá podés forzar MDY si tu fuente viene así
-        // En tu caso vimos inversión, así que forzamos MDY cuando es ambiguo:
-        month = a; day = b;
-      }
+        // Datos de ejemplo
+        const DATOS_EJEMPLO = [
+            { OrdenID: '2000015991515', Canal: 'CHEMESCASACENTRAL', FechaHoraIngreso: '2026-01-07 14:30:00', FechaHoraDespacho: '2026-01-08 10:15:00', Estado: 'DESPACHADO', HorasTranscurridas: 19.75, DiasTranscurridos: 0, DiaLogisticoIngreso: '2026-01-07' },
+            { OrdenID: '2000015991517', Canal: 'CHEMESCASACENTRAL', FechaHoraIngreso: '2026-01-07 16:20:00', FechaHoraDespacho: null, Estado: 'PENDIENTE', HorasTranscurridas: 28.5, DiasTranscurridos: 1, DiaLogisticoIngreso: '2026-01-07' },
+            { OrdenID: '78542', Canal: 'PrestaShop_itst', FechaHoraIngreso: '2026-01-07 09:15:00', FechaHoraDespacho: '2026-01-07 16:45:00', Estado: 'DESPACHADO', HorasTranscurridas: 7.5, DiasTranscurridos: 0, DiaLogisticoIngreso: '2026-01-06' },
+            { OrdenID: 'BNA-1002', Canal: 'Tienda_BNA', FechaHoraIngreso: '2026-01-07 12:30:00', FechaHoraDespacho: '2026-01-08 09:00:00', Estado: 'DESPACHADO', HorasTranscurridas: 20.5, DiasTranscurridos: 0, DiaLogisticoIngreso: '2026-01-06' }
+        ];
 
-      let hh = 0, mi = 0, ss = 0;
-      if (parts[1]) {
-        const t = parts[1].split(':');
-        hh = parseInt(t[0] || '0', 10);
-        mi = parseInt(t[1] || '0', 10);
-        ss = parseInt(t[2] || '0', 10);
-      }
+        var chartSLA, chartAging, chartCanales;
 
-      const d = new Date(yyyy, month - 1, day, hh, mi, ss);
-      return isNaN(d.getTime()) ? null : d;
-    }
+        const COLORES = {
+            canales: ['#f97316', '#a78bfa', '#60a5fa', '#f472b6'],
+            aging: ['#2dd4bf', '#fbbf24', '#f97316', '#ef4444'],
+            sla: { ok: '#2dd4bf', warning: '#fbbf24', danger: '#ef4444' }
+        };
 
-    return null;
-  }
+        // -------------------------
+        // Helpers robustos (fecha/número)
+        // -------------------------
+        function toNumberAny(x) {
+            if (x === null || x === undefined || x === '') return null;
+            if (typeof x === 'number') return x;
+            const s = String(x).trim().replace(',', '.');
+            const n = Number(s);
+            return Number.isFinite(n) ? n : null;
+        }
 
-  function parseDateOnly(value) {
-    const d = parseDateSafe(value);
-    if (!d) return null;
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
-  }
+        function parseDateSafe(value) {
+            if (!value) return null;
+            if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
 
-  function normalizeRow(r) {
-    const out = { ...r };
+            let s = String(value).trim().replace(/"/g, '');
+            if (!s || s.toUpperCase() === 'NULL') return null;
 
-    out.HorasTranscurridas = toNumberAny(out.HorasTranscurridas);
-    out.DiasTranscurridos = toNumberAny(out.DiasTranscurridos);
+            // ISO o "YYYY-MM-DD HH:mm:ss"
+            if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+                if (s.includes(' ') && !s.includes('T')) s = s.replace(' ', 'T');
+                const d = new Date(s);
+                return isNaN(d.getTime()) ? null : d;
+            }
 
-    // normalizar fechas a Date internamente
-    out._Ingreso = parseDateSafe(out.FechaHoraIngreso);
-    out._Despacho = parseDateSafe(out.FechaHoraDespacho);
+            // Fechas con "/" (D/M/Y o M/D/Y) + hora opcional.
+            const parts = s.split(' ');
+            const ab = parts[0].split('/');
+            if (ab.length === 3) {
+                const a = parseInt(ab[0], 10);
+                const b = parseInt(ab[1], 10);
+                const yyyy = parseInt(ab[2], 10);
 
-    out._DiaLogIngreso = parseDateOnly(out.DiaLogisticoIngreso);
-    out._DiaLogDespacho = parseDateOnly(out.DiaLogisticoDespacho);
+                let day, month;
+                if (a > 12 && b <= 12) { day = a; month = b; }          // D/M/Y
+                else if (b > 12 && a <= 12) { month = a; day = b; }     // M/D/Y
+                else { month = a; day = b; }                             // ambiguo -> forzamos M/D/Y (evita inversión vista)
 
-    return out;
-  }
+                let hh = 0, mi = 0, ss = 0;
+                if (parts[1]) {
+                    const t = parts[1].split(':');
+                    hh = parseInt(t[0] || '0', 10);
+                    mi = parseInt(t[1] || '0', 10);
+                    ss = parseInt(t[2] || '0', 10);
+                }
+                const d = new Date(yyyy, month - 1, day, hh, mi, ss);
+                return isNaN(d.getTime()) ? null : d;
+            }
 
-  function normalizeData(arr) {
-    return (arr || []).map(normalizeRow).filter(x => x && x.OrdenID);
-  }
+            return null;
+        }
 
-  // SLA 24h según día logístico 13:01 → 13:00
-  // Cumple si: FechaHoraDespacho <= (DiaLogisticoIngreso + 1 día) a las 13:00
-  function cumpleSLA24(row) {
-    if (!row || row.Estado !== 'DESPACHADO') return false;
-    if (!row._Despacho || !row._DiaLogIngreso) return false;
+        function parseDateOnly(value) {
+            const d = parseDateSafe(value);
+            if (!d) return null;
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+        }
 
-    const deadline = new Date(row._DiaLogIngreso.getFullYear(), row._DiaLogIngreso.getMonth(), row._DiaLogIngreso.getDate(), 13, 0, 0);
-    deadline.setDate(deadline.getDate() + 1); // +1 día a las 13:00
+        function normalizeRow(r) {
+            const out = { ...r };
+            out.HorasTranscurridas = toNumberAny(out.HorasTranscurridas);
+            out.DiasTranscurridos = toNumberAny(out.DiasTranscurridos);
+            out._Ingreso = parseDateSafe(out.FechaHoraIngreso);
+            out._Despacho = parseDateSafe(out.FechaHoraDespacho);
+            out._DiaLogIngreso = parseDateOnly(out.DiaLogisticoIngreso);
+            return out;
+        }
 
-    return row._Despacho.getTime() <= deadline.getTime();
-  }
+        function normalizeData(arr) {
+            return (arr || []).map(normalizeRow).filter(x => x && x.OrdenID);
+        }
 
-  // -----------------------------
-  // Formateadores UI
-  // -----------------------------
-  function formatNumber(num) { return num.toLocaleString('es-AR'); }
+        function formatNumber(num) { return num.toLocaleString('es-AR'); }
 
-  function formatHoras(horas) {
-    if (horas === null || horas === undefined) return '-';
-    if (horas < 24) return Math.round(horas) + 'hs';
-    const dias = Math.floor(horas / 24);
-    const hs = Math.round(horas % 24);
-    return dias + 'd ' + hs + 'hs';
-  }
+        function formatHoras(horas) {
+            if (horas === null || horas === undefined) return '-';
+            if (horas < 24) return Math.round(horas) + 'hs';
+            const dias = Math.floor(horas / 24);
+            const hs = Math.round(horas % 24);
+            return dias + 'd ' + hs + 'hs';
+        }
 
-  function formatFecha(fecha) {
-    const d = parseDateSafe(fecha);
-    if (!d) return '-';
-    return d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-  }
+        function formatFecha(fecha) {
+            const d = parseDateSafe(fecha);
+            if (!d) return '-';
+            return d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        }
 
-  function getCanalIcon(canal) {
-    const icons = {
-      'CHEMESCASACENTRAL': '🏠',
-      'PrestaShop_itst': '🛍️',
-      'Tienda_BNA': '🏦',
-      'Mercado Libre': '🛒',
-      'Otros Canales': '📦'
-    };
-    return icons[canal] || '📦';
-  }
+        function getCanalIcon(canal) {
+            const icons = {
+                'CHEMESCASACENTRAL': '🏠',
+                'PrestaShop_itst': '🛍️',
+                'Tienda_BNA': '🏦',
+                'Mercado Libre': '🛒',
+                'Otros Canales': '📦'
+            };
+            return icons[canal] || '📦';
+        }
 
-  function getAlertaIcon(horas) {
-    if (horas <= 24) return { icon: '🟢', class: 'text-teal-400', label: 'En tiempo' };
-    if (horas <= 48) return { icon: '🟡', class: 'text-amber-400', label: 'Atención' };
-    if (horas <= 72) return { icon: '🟠', class: 'text-orange-400', label: 'Urgente' };
-    return { icon: '🔴', class: 'text-red-400 animate-pulse-slow', label: 'Crítico' };
-  }
+        function getAlertaIcon(horas) {
+            if (horas <= 24) return { icon: '🟢', class: 'text-teal-400', label: 'En tiempo' };
+            if (horas <= 48) return { icon: '🟡', class: 'text-amber-400', label: 'Atención' };
+            if (horas <= 72) return { icon: '🟠', class: 'text-orange-400', label: 'Urgente' };
+            return { icon: '🔴', class: 'text-red-400 animate-pulse-slow', label: 'Crítico' };
+        }
 
-  // -----------------------------
-  // Cálculos
-  // -----------------------------
-  function calcularMetricas(datos) {
-    const total = datos.length;
-    const despachados = datos.filter(d => d.Estado === 'DESPACHADO');
-    const pendientes = datos.filter(d => d.Estado === 'PENDIENTE');
+        // SLA 24h según día logístico: deadline = (DiaLogisticoIngreso + 1 día) a las 13:00.
+        // Si no viene DiaLogisticoIngreso, fallback a HorasTranscurridas <= 24.
+        function cumpleSLA24(d) {
+            if (!d || d.Estado !== 'DESPACHADO') return false;
 
-    const despachadosEn24hs = despachados.filter(d => cumpleSLA24(d)).length;
-    const sla = despachados.length > 0 ? (despachadosEn24hs / despachados.length * 100) : 0;
+            if (d._DiaLogIngreso && d._Despacho) {
+                const deadline = new Date(d._DiaLogIngreso.getFullYear(), d._DiaLogIngreso.getMonth(), d._DiaLogIngreso.getDate(), 13, 0, 0);
+                deadline.setDate(deadline.getDate() + 1);
+                return d._Despacho.getTime() <= deadline.getTime();
+            }
 
-    const tiempoPromedio = despachados.length > 0
-      ? despachados.reduce((sum, d) => sum + (d.HorasTranscurridas || 0), 0) / despachados.length
-      : 0;
+            return (d.HorasTranscurridas !== null && d.HorasTranscurridas !== undefined) ? d.HorasTranscurridas <= 24 : false;
+        }
 
-    const aging = {
-      '0-24hs': pendientes.filter(d => (d.HorasTranscurridas ?? 999999) <= 24).length,
-      '24-48hs': pendientes.filter(d => d.HorasTranscurridas > 24 && d.HorasTranscurridas <= 48).length,
-      '48-72hs': pendientes.filter(d => d.HorasTranscurridas > 48 && d.HorasTranscurridas <= 72).length,
-      '+72hs': pendientes.filter(d => d.HorasTranscurridas > 72).length
-    };
+        function calcularMetricas(datos) {
+            const total = datos.length;
+            const despachados = datos.filter(d => d.Estado === 'DESPACHADO');
+            const pendientes = datos.filter(d => d.Estado === 'PENDIENTE');
 
-    return { total, despachados: despachados.length, pendientes: pendientes.length, sla, tiempoPromedio, aging };
-  }
+            const despachadosEn24hs = despachados.filter(d => cumpleSLA24(d)).length;
+            const sla = despachados.length > 0 ? (despachadosEn24hs / despachados.length * 100) : 0;
 
-  function calcularPorCanal(datos) {
-    const canales = {};
-    datos.forEach(d => {
-      if (!canales[d.Canal]) {
-        canales[d.Canal] = { ingresaron: 0, despachados: 0, pendientes: 0, tiempos: [], en24hs: 0 };
-      }
-      canales[d.Canal].ingresaron++;
+            const tiempoPromedio = despachados.length > 0
+                ? despachados.reduce((sum, d) => sum + (d.HorasTranscurridas || 0), 0) / despachados.length
+                : 0;
 
-      if (d.Estado === 'DESPACHADO') {
-        canales[d.Canal].despachados++;
-        canales[d.Canal].tiempos.push(d.HorasTranscurridas || 0);
-        if (cumpleSLA24(d)) canales[d.Canal].en24hs++;
-      } else {
-        canales[d.Canal].pendientes++;
-      }
-    });
+            const aging = {
+                '0-24hs': pendientes.filter(d => (d.HorasTranscurridas ?? 999999) <= 24).length,
+                '24-48hs': pendientes.filter(d => d.HorasTranscurridas > 24 && d.HorasTranscurridas <= 48).length,
+                '48-72hs': pendientes.filter(d => d.HorasTranscurridas > 48 && d.HorasTranscurridas <= 72).length,
+                '+72hs': pendientes.filter(d => d.HorasTranscurridas > 72).length
+            };
 
-    return Object.entries(canales).map(([nombre, data]) => ({
-      nombre,
-      ingresaron: data.ingresaron,
-      despachados: data.despachados,
-      pendientes: data.pendientes,
-      tiempoPromedio: data.tiempos.length > 0 ? data.tiempos.reduce((a, b) => a + b, 0) / data.tiempos.length : 0,
-      sla: data.despachados > 0 ? (data.en24hs / data.despachados * 100) : 0
-    })).sort((a, b) => b.ingresaron - a.ingresaron);
-  }
+            return { total, despachados: despachados.length, pendientes: pendientes.length, sla, tiempoPromedio, aging };
+        }
 
-  // -----------------------------
-  // Render
-  // -----------------------------
-  function renderMetricas(metricas) {
-    const items = [
-      { titulo: 'Ingresaron', valor: metricas.total, subtitulo: 'Últimos 30 días', gradient: 'from-blue-500 to-blue-600', textColor: 'text-blue-400', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
-      { titulo: 'Despachados', valor: metricas.despachados, subtitulo: Math.round(metricas.despachados / metricas.total * 100) + '% del total', gradient: 'from-teal-500 to-teal-600', textColor: 'text-teal-400', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-      { titulo: 'Pendientes', valor: metricas.pendientes, subtitulo: 'Sin despachar', gradient: 'from-pink-500 to-pink-600', textColor: 'text-pink-400', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-      { titulo: 'Tiempo Prom.', valor: formatHoras(metricas.tiempoPromedio), subtitulo: 'Ingreso → Despacho', gradient: 'from-orange-500 to-orange-600', textColor: 'text-orange-400', icon: 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0' },
-      { titulo: 'SLA 24hs', valor: metricas.sla.toFixed(1) + '%', subtitulo: metricas.sla >= CONFIG.SLA_OBJETIVO ? '✓ Cumple objetivo' : '⚠ Bajo objetivo', gradient: metricas.sla >= CONFIG.SLA_OBJETIVO ? 'from-teal-500 to-teal-600' : 'from-amber-500 to-amber-600', textColor: metricas.sla >= CONFIG.SLA_OBJETIVO ? 'text-teal-400' : 'text-amber-400', icon: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z' }
-    ];
+        function calcularPorCanal(datos) {
+            const canales = {};
+            datos.forEach(d => {
+                if (!canales[d.Canal]) {
+                    canales[d.Canal] = { ingresaron: 0, despachados: 0, pendientes: 0, tiempos: [], en24hs: 0 };
+                }
+                canales[d.Canal].ingresaron++;
+                if (d.Estado === 'DESPACHADO') {
+                    canales[d.Canal].despachados++;
+                    canales[d.Canal].tiempos.push(d.HorasTranscurridas || 0);
+                    if (cumpleSLA24(d)) canales[d.Canal].en24hs++;
+                } else {
+                    canales[d.Canal].pendientes++;
+                }
+            });
 
-    document.getElementById('metricas').innerHTML = items.map((m, i) =>
-      '<div class="bg-dark-800 rounded-2xl border border-dark-700 hover:border-dark-600 transition-all overflow-hidden animate-fade" style="animation-delay:' + (i * 50) + 'ms">' +
-      '<div class="h-1 bg-gradient-to-r ' + m.gradient + '"></div><div class="p-5">' +
-      '<div class="flex items-center justify-between mb-3"><span class="text-sm font-medium text-slate-400 uppercase tracking-wide">' + m.titulo + '</span>' +
-      '<div class="p-2 rounded-xl bg-gradient-to-br ' + m.gradient + ' text-white shadow-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + m.icon + '"/></svg></div></div>' +
-      '<div class="text-3xl font-bold text-white mb-1">' + m.valor + '</div><div class="text-sm ' + m.textColor + '">' + m.subtitulo + '</div></div></div>'
-    ).join('');
-  }
+            return Object.entries(canales).map(([nombre, data]) => ({
+                nombre,
+                ingresaron: data.ingresaron,
+                despachados: data.despachados,
+                pendientes: data.pendientes,
+                tiempoPromedio: data.tiempos.length > 0 ? data.tiempos.reduce((a, b) => a + b, 0) / data.tiempos.length : 0,
+                sla: data.despachados > 0 ? (data.en24hs / data.despachados * 100) : 0
+            })).sort((a, b) => b.ingresaron - a.ingresaron);
+        }
 
-  function renderDatos(datos) {
-    const metricas = calcularMetricas(datos);
-    const porCanal = calcularPorCanal(datos);
+        function renderMetricas(metricas) {
+            const items = [
+                { titulo: 'Ingresaron', valor: metricas.total, subtitulo: 'Últimos 30 días', gradient: 'from-blue-500 to-blue-600', textColor: 'text-blue-400', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
+                { titulo: 'Despachados', valor: metricas.despachados, subtitulo: (metricas.total > 0 ? Math.round(metricas.despachados / metricas.total * 100) : 0) + '% del total', gradient: 'from-teal-500 to-teal-600', textColor: 'text-teal-400', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+                { titulo: 'Pendientes', valor: metricas.pendientes, subtitulo: 'Sin despachar', gradient: 'from-pink-500 to-pink-600', textColor: 'text-pink-400', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+                { titulo: 'Tiempo Prom.', valor: formatHoras(metricas.tiempoPromedio), subtitulo: 'Ingreso → Despacho', gradient: 'from-orange-500 to-orange-600', textColor: 'text-orange-400', icon: 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0' },
+                { titulo: 'SLA 24hs', valor: metricas.sla.toFixed(1) + '%', subtitulo: metricas.sla >= CONFIG.SLA_OBJETIVO ? '✓ Cumple objetivo' : '⚠ Bajo objetivo', gradient: metricas.sla >= CONFIG.SLA_OBJETIVO ? 'from-teal-500 to-teal-600' : 'from-amber-500 to-amber-600', textColor: metricas.sla >= CONFIG.SLA_OBJETIVO ? 'text-teal-400' : 'text-amber-400', icon: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z' }
+            ];
 
-    renderMetricas(metricas);
-    renderGraficos(metricas, porCanal);
-    renderTablaPendientes(datos);
-    renderTablaCanales(porCanal);
+            document.getElementById('metricas').innerHTML = items.map((m, i) =>
+                '<div class="bg-dark-800 rounded-2xl border border-dark-700 hover:border-dark-600 transition-all overflow-hidden animate-fade" style="animation-delay:' + (i * 50) + 'ms">' +
+                '<div class="h-1 bg-gradient-to-r ' + m.gradient + '"></div><div class="p-5">' +
+                '<div class="flex items-center justify-between mb-3"><span class="text-sm font-medium text-slate-400 uppercase tracking-wide">' + m.titulo + '</span>' +
+                '<div class="p-2 rounded-xl bg-gradient-to-br ' + m.gradient + ' text-white shadow-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + m.icon + '"/></svg></div></div>' +
+                '<div class="text-3xl font-bold text-white mb-1">' + m.valor + '</div><div class="text-sm ' + m.textColor + '">' + m.subtitulo + '</div></div></div>'
+            ).join('');
+        }
 
-    document.getElementById('ultimaActualizacion').textContent =
-      'Última actualización: ' + new Date().toLocaleString('es-AR');
-  }
+        function renderGraficos(metricas, porCanal) {
+            if (chartSLA) chartSLA.destroy();
+            if (chartAging) chartAging.destroy();
+            if (chartCanales) chartCanales.destroy();
+            Chart.defaults.color = '#94a3b8';
 
-  // -----------------------------
-  // Gráficos (se conserva tu lógica)
-  // -----------------------------
-  function renderGraficos(metricas, porCanal) {
-    if (chartSLA) chartSLA.destroy();
-    if (chartAging) chartAging.destroy();
-    if (chartCanales) chartCanales.destroy();
-    Chart.defaults.color = '#94a3b8';
+            const slaColor = metricas.sla >= CONFIG.SLA_OBJETIVO ? COLORES.sla.ok : metricas.sla >= 70 ? COLORES.sla.warning : COLORES.sla.danger;
+            document.getElementById('slaValue').textContent = metricas.sla.toFixed(1) + '%';
+            document.getElementById('slaValue').className = 'text-4xl font-bold ' + (metricas.sla >= CONFIG.SLA_OBJETIVO ? 'text-teal-400' : metricas.sla >= 70 ? 'text-amber-400' : 'text-red-400');
 
-    const slaColor = metricas.sla >= CONFIG.SLA_OBJETIVO ? COLORES.sla.ok : metricas.sla >= 70 ? COLORES.sla.warning : COLORES.sla.danger;
-    document.getElementById('slaValue').textContent = metricas.sla.toFixed(1) + '%';
-    document.getElementById('slaValue').className =
-      'text-4xl font-bold ' + (metricas.sla >= CONFIG.SLA_OBJETIVO ? 'text-teal-400' : metricas.sla >= 70 ? 'text-amber-400' : 'text-red-400');
+            chartSLA = new Chart(document.getElementById('chartSLA').getContext('2d'), {
+                type: 'doughnut',
+                data: { datasets: [{ data: [metricas.sla, 100 - metricas.sla], backgroundColor: [slaColor, '#334155'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+            });
 
-    chartSLA = new Chart(document.getElementById('chartSLA').getContext('2d'), {
-      type: 'doughnut',
-      data: { datasets: [{ data: [metricas.sla, 100 - metricas.sla], backgroundColor: [slaColor, '#334155'], borderWidth: 0 }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
-    });
+            chartAging = new Chart(document.getElementById('chartAging').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['0-24hs', '24-48hs', '48-72hs', '+72hs'],
+                    datasets: [{ data: [metricas.aging['0-24hs'], metricas.aging['24-48hs'], metricas.aging['48-72hs'], metricas.aging['+72hs']], backgroundColor: COLORES.aging, borderRadius: 6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' } }, y: { grid: { display: false } } } }
+            });
 
-    chartAging = new Chart(document.getElementById('chartAging').getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: ['0-24hs', '24-48hs', '48-72hs', '+72hs'],
-        datasets: [{
-          data: [metricas.aging['0-24hs'], metricas.aging['24-48hs'], metricas.aging['48-72hs'], metricas.aging['+72hs']],
-          backgroundColor: COLORES.aging,
-          borderRadius: 6
-        }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' } }, y: { grid: { display: false } } } }
-    });
+            chartCanales = new Chart(document.getElementById('chartCanales').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: porCanal.map(c => c.nombre),
+                    datasets: [{ data: porCanal.map(c => c.despachados), backgroundColor: COLORES.canales, borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 }, color: '#94a3b8' } } } }
+            });
+        }
 
-    chartCanales = new Chart(document.getElementById('chartCanales').getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: porCanal.map(c => c.nombre),
-        datasets: [{ data: porCanal.map(c => c.despachados), backgroundColor: COLORES.canales, borderWidth: 0 }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 }, color: '#94a3b8' } } } }
-    });
-  }
+        function renderTablaPendientes(datos) {
+            const pendientes = datos
+                .filter(d => d.Estado === 'PENDIENTE')
+                .sort((a, b) => (b.HorasTranscurridas || 0) - (a.HorasTranscurridas || 0));
 
-  function renderTablaPendientes(datos) {
-    const pendientes = datos.filter(d => d.Estado === 'PENDIENTE')
-      .sort((a, b) => (b.HorasTranscurridas || 0) - (a.HorasTranscurridas || 0));
+            document.getElementById('pendientesCount').textContent = pendientes.length + ' pedidos';
 
-    document.getElementById('pendientesCount').textContent = pendientes.length + ' pedidos';
+            document.getElementById('tablaPendientes').innerHTML = pendientes.length === 0
+                ? '<tr><td colspan="6" class="px-5 py-8 text-center text-teal-400">🎉 ¡No hay pedidos pendientes!</td></tr>'
+                : pendientes.map(p => {
+                    const alerta = getAlertaIcon(p.HorasTranscurridas || 0);
+                    const dias = p.DiasTranscurridos || Math.floor((p.HorasTranscurridas || 0) / 24);
+                    return '<tr class="hover:bg-dark-700/50 transition-colors">' +
+                        '<td class="px-5 py-3 text-white font-mono text-xs">' + p.OrdenID + '</td>' +
+                        '<td class="px-5 py-3 text-slate-300">' + getCanalIcon(p.Canal) + ' ' + p.Canal + '</td>' +
+                        '<td class="px-5 py-3 text-slate-400 text-sm">' + formatFecha(p.FechaHoraIngreso) + '</td>' +
+                        '<td class="px-5 py-3 text-right font-semibold ' + alerta.class + '">' + dias + 'd</td>' +
+                        '<td class="px-5 py-3 text-right font-semibold ' + alerta.class + '">' + formatHoras(p.HorasTranscurridas || 0) + '</td>' +
+                        '<td class="px-5 py-3 text-center"><span title="' + alerta.label + '">' + alerta.icon + '</span></td>' +
+                    '</tr>';
+                }).join('');
+        }
 
-    document.getElementById('tablaPendientes').innerHTML = pendientes.length === 0
-      ? '<tr><td colspan="6" class="px-5 py-8 text-center text-teal-400">🎉 ¡No hay pedidos pendientes!</td></tr>'
-      : pendientes.map(p => {
-        const alerta = getAlertaIcon(p.HorasTranscurridas || 0);
-        const dias = p.DiasTranscurridos || Math.floor((p.HorasTranscurridas || 0) / 24);
-        return '<tr class="hover:bg-dark-700/50 transition-colors">' +
-          '<td class="px-5 py-3 text-white font-mono text-xs">' + p.OrdenID + '</td>' +
-          '<td class="px-5 py-3 text-slate-300">' + getCanalIcon(p.Canal) + ' ' + p.Canal + '</td>' +
-          '<td class="px-5 py-3 text-slate-400 text-sm">' + formatFecha(p.FechaHoraIngreso) + '</td>' +
-          '<td class="px-5 py-3 text-right font-semibold ' + alerta.class + '">' + dias + 'd</td>' +
-          '<td class="px-5 py-3 text-right font-semibold ' + alerta.class + '">' + formatHoras(p.HorasTranscurridas) + '</td>' +
-          '<td class="px-5 py-3 text-center"><span title="' + alerta.label + '">' + alerta.icon + '</span></td>' +
-          '</tr>';
-      }).join('');
-  }
+        function renderTablaCanales(porCanal) {
+            document.getElementById('tablaCanales').innerHTML = porCanal.map(c => {
+                const slaClass = c.sla >= CONFIG.SLA_OBJETIVO ? 'text-teal-400' : c.sla >= 70 ? 'text-amber-400' : 'text-pink-400';
+                return '<tr class="hover:bg-dark-700/50 transition-colors">' +
+                    '<td class="px-5 py-3 text-white font-semibold">' + getCanalIcon(c.nombre) + ' ' + c.nombre + '</td>' +
+                    '<td class="px-5 py-3 text-right text-slate-300">' + formatNumber(c.ingresaron) + '</td>' +
+                    '<td class="px-5 py-3 text-right text-teal-400">' + formatNumber(c.despachados) + '</td>' +
+                    '<td class="px-5 py-3 text-right ' + (c.pendientes > 0 ? 'text-pink-400 font-semibold' : 'text-slate-500') + '">' + formatNumber(c.pendientes) + '</td>' +
+                    '<td class="px-5 py-3 text-right text-orange-400">' + formatHoras(c.tiempoPromedio) + '</td>' +
+                    '<td class="px-5 py-3 text-right font-semibold ' + slaClass + '">' + c.sla.toFixed(1) + '%</td>' +
+                '</tr>';
+            }).join('');
+        }
 
-  function renderTablaCanales(porCanal) {
-    document.getElementById('tablaCanales').innerHTML = porCanal.map(c => {
-      const slaClass = c.sla >= CONFIG.SLA_OBJETIVO ? 'text-teal-400' : c.sla >= 70 ? 'text-amber-400' : 'text-pink-400';
-      return '<tr class="hover:bg-dark-700/50 transition-colors">' +
-        '<td class="px-5 py-3 text-white font-semibold">' + getCanalIcon(c.nombre) + ' ' + c.nombre + '</td>' +
-        '<td class="px-5 py-3 text-right text-slate-300">' + formatNumber(c.ingresaron) + '</td>' +
-        '<td class="px-5 py-3 text-right text-teal-400">' + formatNumber(c.despachados) + '</td>' +
-        '<td class="px-5 py-3 text-right ' + (c.pendientes > 0 ? 'text-pink-400 font-semibold' : 'text-slate-500') + '">' + formatNumber(c.pendientes) + '</td>' +
-        '<td class="px-5 py-3 text-right text-orange-400">' + formatHoras(c.tiempoPromedio) + '</td>' +
-        '<td class="px-5 py-3 text-right font-semibold ' + slaClass + '">' + c.sla.toFixed(1) + '%</td>' +
-        '</tr>';
-    }).join('');
-  }
+        function renderDatos(datos) {
+            const metricas = calcularMetricas(datos);
+            const porCanal = calcularPorCanal(datos);
 
-  async function cargarDatos() {
-    const btn = document.getElementById('btnActualizar');
-    const icon = document.getElementById('iconRefresh');
-    const errorDiv = document.getElementById('errorMsg');
+            renderMetricas(metricas);
+            renderGraficos(metricas, porCanal);
+            renderTablaPendientes(datos);
+            renderTablaCanales(porCanal);
 
-    btn.disabled = true;
-    icon.classList.add('animate-spin');
-    errorDiv.classList.add('hidden');
+            document.getElementById('ultimaActualizacion').textContent = 'Última actualización: ' + new Date().toLocaleString('es-AR');
+        }
 
-    try {
-      let datos;
-      if (CONFIG.USAR_DATOS_EJEMPLO) {
-        await new Promise(r => setTimeout(r, 200));
-        datos = DATOS_EJEMPLO;
-      } else {
-        const response = await fetch(CONFIG.APPS_SCRIPT_URL);
-        if (!response.ok) throw new Error('Error HTTP');
-        const json = await response.json();
-        datos = json.data || json;
-      }
+        async function cargarDatos() {
+            const btn = document.getElementById('btnActualizar');
+            const icon = document.getElementById('iconRefresh');
+            const errorDiv = document.getElementById('errorMsg');
+            const errorText = document.getElementById('errorText');
 
-      datos = normalizeData(datos);
-      renderDatos(datos);
+            // Guardas defensivas
+            if (!btn || !icon || !errorDiv || !errorText) {
+                console.error('Faltan elementos del DOM (btn/icon/errorMsg/errorText).');
+                return;
+            }
 
-    } catch (error) {
-      console.error('Error:', error);
-      document.getElementById('errorText').textContent = 'Error al cargar los datos.';
-      errorDiv.classList.remove('hidden');
-    } finally {
-      btn.disabled = false;
-      icon.classList.remove('animate-spin');
-    }
-  }
+            btn.disabled = true;
+            icon.classList.add('animate-spin');
+            errorDiv.classList.add('hidden');
+            errorText.textContent = '';
 
-  window.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('btnActualizar');
-  if (btn) {
-    btn.addEventListener('click', cargarDatos);
-  } else {
-    console.warn('btnActualizar no encontrado en el DOM');
-  }
+            try {
+                let datos;
 
-  cargarDatos();
-  setInterval(cargarDatos, 5 * 60 * 1000);
-});
+                if (CONFIG.USAR_DATOS_EJEMPLO) {
+                    await new Promise(r => setTimeout(r, 200));
+                    datos = DATOS_EJEMPLO;
+                } else {
+                    const response = await fetch(CONFIG.APPS_SCRIPT_URL, { cache: 'no-store' });
+                    const raw = await response.text();
 
-</script>
+                    // Si el endpoint devolvió HTML, no es JSON (Apps Script mal publicado o error)
+                    if (raw.trim().startsWith('<')) {
+                        throw new Error('El Apps Script devolvió HTML (no JSON). Revisá el despliegue como Web App. Preview: ' + raw.slice(0, 160));
+                    }
+
+                    let json;
+                    try {
+                        json = JSON.parse(raw);
+                    } catch {
+                        throw new Error('Respuesta no parseable como JSON. Preview: ' + raw.slice(0, 160));
+                    }
+
+                    if (json && json.success === false) {
+                        throw new Error('Apps Script error: ' + (json.error || 'sin detalle'));
+                    }
+
+                    datos = (json && json.data) ? json.data : json;
+                }
+
+                if (!Array.isArray(datos)) {
+                    throw new Error('Datos inválidos: se esperaba un array y llegó: ' + typeof datos);
+                }
+
+                datos = normalizeData(datos);
+                renderDatos(datos);
+
+            } catch (error) {
+                console.error('Error:', error);
+                errorText.textContent = String(error.message || error);
+                errorDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                icon.classList.remove('animate-spin');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('btnActualizar').addEventListener('click', cargarDatos);
+            cargarDatos();
+            setInterval(cargarDatos, 5 * 60 * 1000);
+        });
+    </script>
+</body>
+</html>
